@@ -15,6 +15,13 @@ export function Controls({onSend}) {
         }
     }
 
+    function handleEnterPress(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            handleContentSend();
+        }
+    }
+
     return (
         <div className={styles.Controls}>
             <div className={styles.TextAreaContainer}>
@@ -23,9 +30,10 @@ export function Controls({onSend}) {
                 placeholder="Message AI Chatbot"
                 value={content} 
                 onChange={handleContentChange}
+                onKeyDown={handleEnterPress}
                 />
                 </div>
-            <button className={styles.SendButton} onClick={handleContentSend}>
+            <button className={styles.SendButton} onClick={handleContentSend} >
                 <SendIcon />
             </button>
         </div>
