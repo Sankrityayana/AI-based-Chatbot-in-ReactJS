@@ -6,6 +6,13 @@ import { Controls } from './components/Controls/Controls';
 function App() {
   const [messages, setMessages] = useState([]);
 
+  function handleContentSend(content) {
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      {content, role: 'user'}
+    ])
+  }
+
   return (
     <div>
       <header className={styles.Header}>
@@ -15,7 +22,7 @@ function App() {
       <div className={styles.ChatContainer}>
         <Chat messages={messages} />
       </div>
-      <Controls />
+      <Controls onSend={handleContentSend} />
     </div>
 
   )
