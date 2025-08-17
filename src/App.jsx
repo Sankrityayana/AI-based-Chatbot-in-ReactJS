@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { Chat } from './components/Chat/Chat';
-import { Assistant } from './assistants/googleai'; 
-import styles from './App.module.css';
-import { Controls } from './components/Controls/Controls';
-import { Loader } from './components/Loader/loader';
+import { useState } from "react";
+import { Assistant } from "./assistants/googleai";
+import { Loader } from "./components/Loader/Loader";
+import { Chat } from "./components/Chat/Chat";
+import { Controls } from "./components/Controls/Controls";
+import styles from "./App.module.css";
 
 function App() {
   const assistant = new Assistant();
@@ -15,14 +15,16 @@ function App() {
   }
 
   async function handleContentSend(content) {
-    addMessage({ content, role: 'user' });
+    addMessage({ content, role: "user" });
     setIsLoading(true);
     try {
-      const aireply  = await assistant.chat(content);
-      addMessage({ content: aireply, role: 'assistant'});
+      const result = await assistant.chat(content, messages);
+      addMessage({ content: result, role: "assistant" });
     } catch (error) {
-      console.error('Error generating content:', error);
-      addMessage({ content: 'Sorry, I could not process your request. Please try again', role: 'system' });
+      addMessage({
+        content: "Sorry, I couldn't process your request. Please try again!",
+        role: "system",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -32,16 +34,15 @@ function App() {
     <div className={styles.App}>
       {isLoading && <Loader />}
       <header className={styles.Header}>
-      <img className={styles.Logo} src="/chatbot_logo.png" />
-      <h2 className={styles.Title}>AI Chatbot</h2>
+        <img className={styles.Logo} src="/chatbot_logo.png" />
+        <h2 className={styles.Title}>AI Chatbot</h2>
       </header>
       <div className={styles.ChatContainer}>
         <Chat messages={messages} />
       </div>
-      <Controls onSend={handleContentSend} />
+      <Controls isDisabled={isLoading} onSend={handleContentSend} />
     </div>
-
-  )
+  );
 }
 
-export default App
+export default App;
