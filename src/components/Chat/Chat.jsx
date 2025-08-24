@@ -1,47 +1,63 @@
-import { useRef, useEffect, useMemo } from "react";
-import Markdown from "react-markdown";
+import { useEffect, useState } from "react";
+import { Loader } from "../Loader/Loader";
+import { Messages } from "../Messages/Messages";
+import { Controls } from "../Controls/Controls";
 import styles from "./Chat.module.css";
 
-const WELCOME_MESSAGE_GROUP = [
-  {
-    role: "assistant",
-    content: "Hello! How can I assist you right now?",
-  },
-];
-
-export function Chat({ messages }) {
-  const messagesEndRef = useRef(null);
-  const messagesGroups = useMemo(
-    () =>
-      messages.reduce((groups, message) => {
-        if (message.role === "user") groups.push([]);
-        groups[groups.length - 1].push(message);
-        return groups;
-      }, []),
-    [messages]
-  );
+export function Chat({ assistant, chatId, chatMessages, onChatMessagesUpdate }) {
+  const [messages, setMessages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setMessages(chatMessages);
+  }, [chatId]);
+
+  useEffect(() => {
+    onChatMessagesUpdate(messages);
   }, [messages]);
 
-  return (
-    <div className={styles.Chat}>
-      {[WELCOME_MESSAGE_GROUP, ...messagesGroups].map(
-        (messages, groupIndex) => (
-          // Group
-          <div key={groupIndex} className={styles.Group}>
-            {messages.map(({ role, content }, index) => (
-              // Message
-              <div key={index} className={styles.Message} data-role={role}>
-                <Markdown>{content}</Markdown>
-              </div>
-            ))}
-          </div>
-        )
-      )}
+  function addMessage(message) {
+    setMessages((prevMessages) => [...prevMessages, message]);
+  }
 
-      <div ref={messagesEndRef} />
-    </div>
+  async function handleContentSend(content) {
+    addMessage({ content, role: "user" });
+    setIsLoading(true);
+    try {
+      const result = await assistant.chat(
+        content,
+        messages.filter(({ role }) => role !== "system")
+      );
+
+      let fullResponse = "";
+      for await (const chunk of result) {
+        fullResponse += chunk;
+      }
+      addMessage({ content: fullResponse, role: "assistant" });
+    } catch (error) {
+      addMessage({
+        content:
+          error?.message ??
+          "Sorry, I couldn't process your request. Please try again!",
+        role: "system",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  return (
+    <>
+      {isLoading && <Loader />}
+
+      <div className={styles.Chat}>
+        <Messages messages={messages} />
+      </div>
+
+      <Controls
+        isDisabled={isLoading}
+        onSend={handleContentSend}
+      />
+    </>
   );
 }
